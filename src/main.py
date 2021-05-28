@@ -66,8 +66,12 @@ def save_results(result, solution_file, additional_info_file, target_state):
 def solve_puzzle(strategy, strategy_param, rows, columns, initial_state, target_state):
     if strategy == "bfs":
         result = algorithms.solve_bfs(strategy_param, rows, columns, initial_state, target_state)
+    elif strategy == "dfs":
+        result = algorithms.solve_dfs(strategy_param, rows, columns, initial_state, target_state, 21)
+    elif strategy == "astr":
+        result = algorithms.solve_a_star(strategy_param, rows, columns, initial_state, target_state)
     else:
-        raise Exception("Incorrect strategy")
+        raise Exception("Incorrect strategy: ", strategy)
     return result
 
 

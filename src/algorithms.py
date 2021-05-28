@@ -1,10 +1,13 @@
 import collections
 import time
+import itertools
+import queue
 from Result import Result
 from Node import Node
 
 
 def solve_bfs(search_order, rows, columns, initial_state, target_state):
+    validate_directions(search_order)
     nodes_states = collections.OrderedDict()
     explored_states = dict()
     node_state = initial_state
@@ -17,7 +20,6 @@ def solve_bfs(search_order, rows, columns, initial_state, target_state):
         end_time = time.process_time()
         return Result(node, len(nodes_states) + len(explored_states), len(explored_states), 0, end_time - start_time,
                       node_state)
-
     while 1:
         zero_position = node_state.index("0")
         neighbours = get_neighbours(node_state, rows, columns, zero_position, search_order)
@@ -32,6 +34,98 @@ def solve_bfs(search_order, rows, columns, initial_state, target_state):
                                   max_depth + 1, end_time - end_time, neighbour)
         explored_states[node_state] = nodes_states.pop(node_state)
         node_state = next(iter(nodes_states))
+        node = nodes_states[node_state]
+        max_depth = max(node.cost, max_depth)
+
+
+def solve_dfs(search_order, rows, columns, initial_state, target_state, depth_limit):
+    validate_directions(search_order)
+    nodes_states = collections.OrderedDict()
+    explored_states = dict()
+    node_state = initial_state
+    node = Node(None, None, 0)
+    nodes_states[node_state] = node
+    max_depth = 0
+    visited_states_count = 1
+    explored_states_count = 0
+
+    start_time = time.process_time()
+    if node_state == target_state:
+        end_time = time.process_time()
+        return Result(node, visited_states_count, explored_states_count, 0, end_time - start_time, node_state)
+    while 1:
+        zero_position = node_state.index("0")
+        neighbours = get_neighbours(node_state, rows, columns, zero_position, search_order)
+        for key, neighbour in reversed(neighbours.items()):
+            is_visited = neighbour in nodes_states
+            is_explored = neighbour in explored_states
+            new_node = Node(node, key, node.cost + 1)
+            if not (is_visited or is_explored):
+                visited_states_count += 1
+                if neighbour == target_state:
+                    end_time = time.process_time()
+                    return Result(new_node, visited_states_count, explored_states_count, max_depth + 1,
+                                  end_time - start_time, neighbour)
+                if new_node.cost < depth_limit:
+                    nodes_states[neighbour] = new_node
+                    nodes_states.move_to_end(neighbour, last=False)
+            else:
+                if is_visited and nodes_states[neighbour].cost > new_node.cost:
+                    nodes_states[neighbour] = new_node
+                    nodes_states.move_to_end(neighbour, last=False)
+                elif is_explored and explored_states[neighbour].cost > new_node.cost:
+                    nodes_states[neighbour] = new_node
+                    nodes_states.move_to_end(neighbour, last=False)
+                    explored_states[neighbour] = new_node
+        if not (node_state in explored_states):
+            explored_states_count += 1
+        explored_states[node_state] = nodes_states.pop(node_state)
+        if len(nodes_states) == 0:
+            end_time = time.clock()
+            return Result(node, visited_states_count, explored_states_count, max_depth, end_time - start_time,
+                          node_state)
+        node_state = next(iter(nodes_states))
+        node = nodes_states[node_state]
+        if node.cost < depth_limit:
+            max_depth = max(node.cost, max_depth)
+
+
+def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
+    heuristic = validate_heuristic(heuristic_choice)
+    search_order = "LRUD"
+
+    states_queue = queue.PriorityQueue()
+    visited_states = dict()
+    explored_states = dict()
+    nodes_states = dict()
+    node_state = initial_state
+    node = Node(None, None, 0)
+    nodes_states[node_state] = node
+    max_depth = 0
+
+    start_time = time.clock()
+
+    if node_state == target_state:
+        end_time = time.clock()
+        return Result(node, len(visited_states) + len(explored_states), len(explored_states), 0,
+                      end_time - start_time, node_state)
+    while 1:
+        zero_position = node_state.index("0")
+        neighbours = get_neighbours(node_state, rows, columns, zero_position, search_order)
+        for key in neighbours:
+            neighbour = neighbours[key]
+            if not (neighbour in visited_states or neighbour in explored_states):
+                priority = node.cost + 1 + heuristic(neighbour, target_state, columns)
+                visited_states[neighbour] = 1
+                states_queue.put((priority, neighbour))
+                nodes_states[neighbour] = Node(node, key, node.cost + 1)
+                if neighbour == target_state:
+                    end_time = time.clock()
+                    return Result(nodes_states[neighbour], len(visited_states) + len(explored_states),
+                                  len(explored_states), max_depth + 1, end_time - start_time, neighbour)
+        explored_states[node_state] = 1
+        node_state = states_queue.get()[1]
+        visited_states.pop(node_state)
         node = nodes_states[node_state]
         max_depth = max(node.cost, max_depth)
 
@@ -71,3 +165,34 @@ def get_neighbours(node_state, rows, columns, zero_position, search_order):
                 new_state[new_position] = "0"
                 neighbours["D"] = new_state
     return neighbours
+
+
+def hamming(node_state, target_state):
+    wrong_position_count = 0
+    for i in range(len(node_state)):
+        if node_state[i] != target_state[i]:
+            wrong_position_count += 1
+    return wrong_position_count
+
+
+def manhattan(node_state, target_state, columns):
+    sum_of_distances = 0
+    for i in range(len(node_state)):
+        target_position = target_state.index(node_state[i])
+        sum_of_distances += abs(i % columns - target_position % columns) + abs(
+            int(i / columns) - int(target_position / columns))
+    return sum_of_distances
+
+
+def validate_directions(search_order):
+    if search_order not in itertools.permutations(["L", "U", "R", "D"]):
+        raise Exception("Incorrect search order: ", search_order)
+
+
+def validate_heuristic(heuristic_choice):
+    if heuristic_choice == "hamm":
+        return hamming
+    elif heuristic_choice == "manh":
+        return manhattan
+    else:
+        raise Exception("Incorrect heuristic: ", heuristic_choice)
