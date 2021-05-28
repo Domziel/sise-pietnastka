@@ -14,7 +14,7 @@ def main(argv):
     additional_info_file = argv[5]
 
     initial_state, target_state, rows, columns = load_state(initial_state_file)
-    result = solve_puzzle(strategy, initial_state, target_state, strategy_param)
+    result = solve_puzzle(strategy, strategy_param, rows, columns, initial_state, target_state)
     save_results(result, solution_file, additional_info_file, target_state)
 
 
@@ -26,9 +26,9 @@ def load_state(initial_state_file):
     rows = int(lines[0].split(" ")[0])
     columns = int(lines[0].split(" ")[1])
     initial_state = ()
-    target_state = ([str(i) for i in range(1, rows * columns)] + ["0"])
+    target_state = tuple([str(i) for i in range(1, rows * columns)] + ["0"])
     for line in lines[1:]:
-        initial_state += (line.replace("\n", "").split(" "))
+        initial_state += tuple(line.replace("\n", "").split(" "))
     return initial_state, target_state, rows, columns
 
 
@@ -65,11 +65,11 @@ def save_results(result, solution_file, additional_info_file, target_state):
 
 def solve_puzzle(strategy, strategy_param, rows, columns, initial_state, target_state):
     if strategy == "bfs":
-        result = algorithms.solve_bfs(strategy_param, rows, columns, initial_state, target_state)
+        result = algorithms.solve_bfs(strategy_param, rows, columns, tuple(initial_state), target_state)
     elif strategy == "dfs":
-        result = algorithms.solve_dfs(strategy_param, rows, columns, initial_state, target_state, 21)
+        result = algorithms.solve_dfs(strategy_param, rows, columns, tuple(initial_state), target_state, 21)
     elif strategy == "astr":
-        result = algorithms.solve_a_star(strategy_param, rows, columns, initial_state, target_state)
+        result = algorithms.solve_a_star(strategy_param, rows, columns, tuple(initial_state), target_state)
     else:
         raise Exception("Incorrect strategy: ", strategy)
     return result

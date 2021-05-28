@@ -31,7 +31,7 @@ def solve_bfs(search_order, rows, columns, initial_state, target_state):
                 if neighbour == target_state:
                     end_time = time.process_time()
                     return Result(new_node, len(nodes_states) + len(explored_states), len(explored_states),
-                                  max_depth + 1, end_time - end_time, neighbour)
+                                  max_depth + 1, end_time - start_time, neighbour)
         explored_states[node_state] = nodes_states.pop(node_state)
         node_state = next(iter(nodes_states))
         node = nodes_states[node_state]
@@ -103,10 +103,10 @@ def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
     nodes_states[node_state] = node
     max_depth = 0
 
-    start_time = time.clock()
+    start_time = time.process_time()
 
     if node_state == target_state:
-        end_time = time.clock()
+        end_time = time.process_time()
         return Result(node, len(visited_states) + len(explored_states), len(explored_states), 0,
                       end_time - start_time, node_state)
     while 1:
@@ -120,7 +120,7 @@ def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
                 states_queue.put((priority, neighbour))
                 nodes_states[neighbour] = Node(node, key, node.cost + 1)
                 if neighbour == target_state:
-                    end_time = time.clock()
+                    end_time = time.process_time()
                     return Result(nodes_states[neighbour], len(visited_states) + len(explored_states),
                                   len(explored_states), max_depth + 1, end_time - start_time, neighbour)
         explored_states[node_state] = 1
@@ -138,32 +138,32 @@ def get_neighbours(node_state, rows, columns, zero_position, search_order):
     for direction in search_order:
         if direction == "L":
             if column != 0:
-                new_state = node_state
+                new_state = list(node_state)
                 new_position = zero_position - 1
                 new_state[zero_position] = new_state[new_position]
                 new_state[new_position] = "0"
-                neighbours["L"] = new_state
+                neighbours["L"] = tuple(new_state)
         elif direction == "R":
             if column != columns - 1:
-                new_state = node_state
+                new_state = list(node_state)
                 new_position = zero_position + 1
                 new_state[zero_position] = new_state[new_position]
                 new_state[new_position] = "0"
-                neighbours["R"] = new_state
+                neighbours["R"] = tuple(new_state)
         elif direction == "U":
             if row != 0:
-                new_state = node_state
+                new_state = list(node_state)
                 new_position = zero_position - columns
                 new_state[zero_position] = new_state[new_position]
                 new_state[new_position] = "0"
-                neighbours["U"] = new_state
+                neighbours["U"] = tuple(new_state)
         elif direction == "D":
             if row != rows - 1:
                 new_state = list(node_state)
                 new_position = zero_position + columns
                 new_state[zero_position] = new_state[new_position]
                 new_state[new_position] = "0"
-                neighbours["D"] = new_state
+                neighbours["D"] = tuple(new_state)
     return neighbours
 
 
@@ -185,7 +185,11 @@ def manhattan(node_state, target_state, columns):
 
 
 def validate_directions(search_order):
-    if search_order not in itertools.permutations(["L", "U", "R", "D"]):
+    coma_separated_permutations = list(itertools.permutations(["L", "U", "D", "R"]))
+    permutations = []
+    for permutation in coma_separated_permutations:
+        permutations.append(''.join(permutation))
+    if search_order not in permutations:
         raise Exception("Incorrect search order: ", search_order)
 
 
