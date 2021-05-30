@@ -114,7 +114,7 @@ def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
         for key in neighbours:
             neighbour = neighbours[key]
             if not (neighbour in visited_states or neighbour in explored_states):
-                priority = node.cost + 1 + heuristic(neighbour, target_state)
+                priority = node.cost + 1 + heuristic(neighbour, target_state, columns)
                 visited_states[neighbour] = 1
                 states_queue.put((priority, neighbour))
                 nodes_states[neighbour] = Node(node, key, node.cost + 1)
