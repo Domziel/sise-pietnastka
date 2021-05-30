@@ -15,9 +15,9 @@ def solve_bfs(search_order, rows, columns, initial_state, target_state):
     nodes_states[node_state] = node
     max_depth = 0
 
-    start_time = time.process_time()
+    start_time = time.perf_counter()
     if node_state == target_state:
-        end_time = time.process_time()
+        end_time = time.perf_counter()
         return Result(node, len(nodes_states) + len(explored_states), len(explored_states), 0, end_time - start_time,
                       node_state)
     while 1:
@@ -29,7 +29,7 @@ def solve_bfs(search_order, rows, columns, initial_state, target_state):
                 new_node = Node(node, key, node.cost + 1)
                 nodes_states[neighbour] = new_node
                 if neighbour == target_state:
-                    end_time = time.process_time()
+                    end_time = time.perf_counter()
                     return Result(new_node, len(nodes_states) + len(explored_states), len(explored_states),
                                   max_depth + 1, end_time - start_time, neighbour)
         explored_states[node_state] = nodes_states.pop(node_state)
@@ -49,9 +49,9 @@ def solve_dfs(search_order, rows, columns, initial_state, target_state, depth_li
     visited_states_count = 1
     explored_states_count = 0
 
-    start_time = time.process_time()
+    start_time = time.perf_counter()
     if node_state == target_state:
-        end_time = time.process_time()
+        end_time = time.perf_counter()
         return Result(node, visited_states_count, explored_states_count, 0, end_time - start_time, node_state)
     while 1:
         zero_position = node_state.index("0")
@@ -63,7 +63,7 @@ def solve_dfs(search_order, rows, columns, initial_state, target_state, depth_li
             if not (is_visited or is_explored):
                 visited_states_count += 1
                 if neighbour == target_state:
-                    end_time = time.process_time()
+                    end_time = time.perf_counter()
                     return Result(new_node, visited_states_count, explored_states_count, max_depth + 1,
                                   end_time - start_time, neighbour)
                 if new_node.cost < depth_limit:
@@ -103,10 +103,9 @@ def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
     nodes_states[node_state] = node
     max_depth = 0
 
-    start_time = time.process_time()
-
+    start_time = time.perf_counter()
     if node_state == target_state:
-        end_time = time.process_time()
+        end_time = time.perf_counter()
         return Result(node, len(visited_states) + len(explored_states), len(explored_states), 0,
                       end_time - start_time, node_state)
     while 1:
@@ -120,7 +119,7 @@ def solve_a_star(heuristic_choice, rows, columns, initial_state, target_state):
                 states_queue.put((priority, neighbour))
                 nodes_states[neighbour] = Node(node, key, node.cost + 1)
                 if neighbour == target_state:
-                    end_time = time.process_time()
+                    end_time = time.perf_counter()
                     return Result(nodes_states[neighbour], len(visited_states) + len(explored_states),
                                   len(explored_states), max_depth + 1, end_time - start_time, neighbour)
         explored_states[node_state] = 1
