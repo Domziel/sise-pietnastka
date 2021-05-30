@@ -166,7 +166,7 @@ def get_neighbours(node_state, rows, columns, zero_position, search_order):
     return neighbours
 
 
-def hamming(node_state, target_state):
+def hamming(node_state, target_state, columns):
     wrong_position_count = 0
     for i in range(len(node_state)):
         if node_state[i] != target_state[i]:
